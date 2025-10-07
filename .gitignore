@@ -1,0 +1,13 @@
+﻿# node/python
+node_modules/
+venv/
+__pycache__/
+dist/
+# docker
+*.log
+**/tmp/
+# IDE
+.vscode/
+.idea/
+# runtime
+ops/compose/*.env.local
