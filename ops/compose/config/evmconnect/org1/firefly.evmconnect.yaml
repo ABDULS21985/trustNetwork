@@ -1,0 +1,16 @@
+log:
+  level: info
+
+node:
+  url: http://besu:8545
+
+confirmations:
+  required: 0
+
+pollingInterval: 1s
+
+txCacheSize: 1000
+
+metrics:
+  enabled: true
+  path: /metrics

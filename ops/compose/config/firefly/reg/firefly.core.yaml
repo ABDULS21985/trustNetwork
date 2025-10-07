@@ -1,0 +1,49 @@
+#//trust-fabric/config/reg/firefly.core.yaml
+
+node:
+  name: reg-node
+  description: Regulator FireFly Node
+  dataDir: /firefly/data
+
+http:
+  address: 0.0.0.0
+  port: 5000   # Exposed as 5100 on host via compose
+
+spi:
+  enabled: true
+  readonly: true
+
+log:
+  level: info
+
+database:
+  type: postgres
+  postgres:
+    url: postgres://firefly:firefly@pg_reg:5432/firefly?sslmode=disable
+
+blockchain:
+  type: evm
+  connector: evmconnect
+  evmconnect:
+    url: http://evmconnect_reg:3000
+    confirmations: 0
+    pollInterval: 1s
+
+multiparty:
+  enabled: true
+  org:
+    name: Regulator
+    key: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  node:
+    name: reg-node
+
+dataexchange:
+  type: https
+  https:
+    url: http://dx_org1:3001   # shares the same DX service for this sample
+
+sharedstorage:
+  type: ipfs
+  ipfs:
+    api:
+      url: http://ipfs:5001

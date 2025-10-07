@@ -1,0 +1,15 @@
+{
+  "api": {
+    "host": "0.0.0.0",
+    "port": 3001,
+    "publicURL": "http://dx_org1:3001"
+  },
+  "p2p": {
+    "endpoint": "http://dx_org1:3001"
+  },
+  "plugins": {
+    "https": {
+      "listenAddress": "0.0.0.0:3001"
+    }
+  }
+}

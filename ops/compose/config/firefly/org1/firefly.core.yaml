@@ -1,0 +1,48 @@
+#//trust-fabric/ops/config/firefly/org1/firefly.core.yaml
+
+node:
+  name: org1-node
+  description: Org1 FireFly Node
+  dataDir: /firefly/data
+
+http:
+  address: 0.0.0.0
+  port: 5000
+
+spi:
+  enabled: true
+
+log:
+  level: info
+
+database:
+  type: postgres
+  postgres:
+    url: postgres://firefly:firefly@pg_org1:5432/firefly?sslmode=disable
+
+blockchain:
+  type: evm
+  connector: evmconnect
+  evmconnect:
+    url: http://evmconnect_org1:3000
+    confirmations: 0
+    pollInterval: 1s
+
+multiparty:
+  enabled: true
+  org:
+    name: Org1
+    key: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  node:
+    name: org1-node
+
+dataexchange:
+  type: https
+  https:
+    url: http://dx_org1:3001
+
+sharedstorage:
+  type: ipfs
+  ipfs:
+    api:
+      url: http://ipfs:5001

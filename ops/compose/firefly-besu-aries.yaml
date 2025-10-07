@@ -1,3 +1,4 @@
+#//trust-fabric/ops/compose/docker-compose.yml
 networks:
   tf_net: {}
 
@@ -15,6 +16,7 @@ services:
   besu:
     image: "${BESU_IMAGE}:${BESU_TAG}"
     container_name: besu
+    user: "0:0"
     command: >
       --network=dev
       --data-path=/data
@@ -24,6 +26,7 @@ services:
       --rpc-ws-api=ETH,NET,WEB3,TXPOOL,CLIQUE
       --host-allowlist=*
       --min-gas-price=0
+      --data-storage-format=BONSAI
     ports:
       - "${BESU_HTTP:-8545}:8545"
       - "${BESU_WS:-8546}:8546"
@@ -57,10 +60,16 @@ services:
     image: "${FF_EVMCONNECT_IMAGE}:${FF_EVMCONNECT_TAG}"
     container_name: evmconnect_org1
     environment:
-      EVMCONNECT_URL: http://besu:8545
-      EVMCONNECT_CONFIRMATIONS: "0"
-      EVMCONNECT_POLL_INTERVAL: "1s"
+      EVMCONNECT_CONFIG_PATH: /etc/evmconnect/firefly.evmconnect.yaml
+      EVMCONNECT_NODE_URL: http://besu:8545
+      EVMCONNECT_CONFIRMATIONS_REQUIRED: 0
+      EVMCONNECT_POLLINGINTERVAL: 1s
+      EVMCONNECT_TXCACHESIZE: 1000
+      EVMCONNECT_HTTP_PORT: 3000
+    command: ["-f", "/etc/evmconnect/firefly.evmconnect.yaml"]  # ADD THIS
     networks: [tf_net]
+    volumes:
+      - ./config/evmconnect/org1:/etc/evmconnect:ro  # FIXED PATH
     depends_on:
       - besu
 
@@ -73,32 +82,19 @@ services:
     ports:
       - "3001:3001"
     networks: [tf_net]
+    volumes:
+      - ./config/dx:/data:ro  # FIXED PATH
 
   firefly_org1:
     image: "${FF_CORE_IMAGE}:${FF_CORE_TAG}"
     container_name: firefly_org1
-    environment:
-      FF_CORE_ADMIN_ENABLED: "true"
-      FF_LOG_LEVEL: info
-      FF_DATABASE_TYPE: postgres
-      FF_DATABASE_URL: postgres://firefly:firefly@pg_org1:5432/firefly?sslmode=disable
-      FF_BLOCKCHAIN_TYPE: evm
-      FF_BLOCKCHAIN_CONNECTOR: evmconnect
-      FF_BLOCKCHAIN_URL: http://evmconnect_org1:3000
-      FF_DATAEXCHANGE_TYPE: https
-      FF_DATAEXCHANGE_URL: http://dx_org1:3001
-      FF_SHAREDSTORAGE_TYPE: ipfs
-      FF_SHAREDSTORAGE_IPFS_URL: http://ipfs:5001
-      FF_MULTIPARTY_ENABLED: "true"
-      FF_MULTIPARTY_ORG_NAME: "Org1"
-      FF_MULTIPARTY_NODE_NAME: "org1-node"
-      FF_MULTIPARTY_KEY: "${FF_ORG1_MULTIPARTY_KEY}"
-      FF_DATA_DIR: /firefly/data
+    # REMOVED redundant environment variables (using config file instead)
     ports:
       - "${FF_ORG1:-5000}:5000"
     networks: [tf_net]
     volumes:
       - firefly_org1_data:/firefly
+      - ./config/firefly/org1:/etc/firefly:ro  # FIXED PATH
     depends_on:
       - postgres_org1
       - evmconnect_org1
@@ -136,38 +132,30 @@ services:
   evmconnect_reg:
     image: "${FF_EVMCONNECT_IMAGE}:${FF_EVMCONNECT_TAG}"
     container_name: evmconnect_reg
+    command: ["-f", "/etc/evmconnect/firefly.evmconnect.yaml"]  # ADD THIS
     environment:
-      EVMCONNECT_URL: http://besu:8545
-      EVMCONNECT_CONFIRMATIONS: "0"
-      EVMCONNECT_POLL_INTERVAL: "1s"
+      EVMCONNECT_CONFIG_PATH: /etc/evmconnect/firefly.evmconnect.yaml
+      EVMCONNECT_NODE_URL: http://besu:8545
+      EVMCONNECT_CONFIRMATIONS_REQUIRED: 0
+      EVMCONNECT_POLLINGINTERVAL: 1s
+      EVMCONNECT_TXCACHESIZE: 1000
+      EVMCONNECT_HTTP_PORT: 3000
     networks: [tf_net]
+    volumes:
+      - ./config/evmconnect/reg:/etc/evmconnect:ro  # FIXED PATH
     depends_on:
       - besu
 
   firefly_reg:
     image: "${FF_CORE_IMAGE}:${FF_CORE_TAG}"
     container_name: firefly_reg
-    environment:
-      FF_CORE_ADMIN_ENABLED: "true"
-      FF_CORE_READONLY: "true"
-      FF_LOG_LEVEL: info
-      FF_DATABASE_TYPE: postgres
-      FF_DATABASE_URL: postgres://firefly:firefly@pg_reg:5432/firefly?sslmode=disable
-      FF_BLOCKCHAIN_TYPE: evm
-      FF_BLOCKCHAIN_CONNECTOR: evmconnect
-      FF_BLOCKCHAIN_URL: http://evmconnect_reg:3000
-      FF_SHAREDSTORAGE_TYPE: ipfs
-      FF_SHAREDSTORAGE_IPFS_URL: http://ipfs:5001
-      FF_MULTIPARTY_ENABLED: "true"
-      FF_MULTIPARTY_ORG_NAME: "Regulator"
-      FF_MULTIPARTY_NODE_NAME: "reg-node"
-      FF_MULTIPARTY_KEY: "${FF_REG_MULTIPARTY_KEY}"
-      FF_DATA_DIR: /firefly/data
+    # REMOVED redundant environment variables (using config file instead)
     ports:
       - "${FF_REG:-5100}:5000"
     networks: [tf_net]
     volumes:
       - firefly_reg_data:/firefly
+      - ./config/firefly/reg:/etc/firefly:ro  # FIXED PATH
     depends_on:
       - postgres_reg
       - evmconnect_reg
@@ -188,6 +176,7 @@ services:
       --auto-accept-invites
       --auto-accept-requests
       --admin-insecure-mode
+      --no-ledger
     ports:
       - "8030:8030"
       - "8031:8031"
@@ -210,6 +199,7 @@ services:
       --auto-accept-invites
       --auto-accept-requests
       --admin-insecure-mode
+      --no-ledger  # FIXED: removed extra dash
     ports:
       - "8040:8040"
       - "8041:8041"

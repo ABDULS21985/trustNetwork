@@ -1,0 +1,22 @@
+log:
+  level: debug  # Changed to debug for more visibility
+
+node:
+  url: http://besu:8545
+
+connector:
+  url: http://0.0.0.0:3000  # Add this line
+
+confirmations:
+  required: 0
+
+pollingInterval: 1s
+
+txCacheSize: 1000
+
+metrics:
+  enabled: true
+  path: /metrics
+
+http:
+  port: 3000  # Add this to specify the port EVMConnect listens on
