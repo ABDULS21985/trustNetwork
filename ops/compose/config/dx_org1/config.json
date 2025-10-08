@@ -19,6 +19,7 @@
     "enabled": true,
     "hostname": "dx_org1",
     "listen": "/ip4/0.0.0.0/tcp/41000",
+    "port": 41000,
     "announce": "",
     "mdns": true
   },
