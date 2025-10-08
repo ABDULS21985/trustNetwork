@@ -1,18 +1,14 @@
 
 {
   "api": {
-    "hostname": "localhost",
+    "hostname": "dx_org1",
     "address": "0.0.0.0",
     "port": 3001,
     "readTimeout": "15s",
     "writeTimeout": "15s",
     "idleTimeout": "90s",
     "tls": {
-      "enabled": true,
-      "certFile": "/config/certs/cert.pem",
-      "keyFile": "/config/certs/key.pem",
-      "caFile": "/config/certs/ca.pem",
-      "requireClientCert": false
+      "enabled": false
     }
   },
   "p2p": {
