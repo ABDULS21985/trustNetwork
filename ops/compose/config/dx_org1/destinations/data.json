@@ -1,10 +1,8 @@
-{
-  "destinations": [
-    {
-      "name": "dx_reg",
-      "url": "https://dx_reg:3001/api/v1/messages",
-      "topics": ["default"],
-      "enabled": true
-    }
-  ]
-}
+[
+  {
+    "name": "dx_reg",
+    "url": "http://dx_reg:3001/api/v1/messages",
+    "topics": ["default"],
+    "enabled": true
+  }
+]
