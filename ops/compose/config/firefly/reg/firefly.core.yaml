@@ -1,49 +1,91 @@
-#//trust-fabric/config/reg/firefly.core.yaml
+# //trust-fabric/ops/compose/config/firefly/reg/firefly.core.yaml
 
-node:
-  name: reg-node
-  description: Regulator FireFly Node
-  dataDir: /firefly/data
-
-http:
-  address: 0.0.0.0
-  port: 5000   # Exposed as 5100 on host via compose
-
-spi:
-  enabled: true
-  readonly: true
-
-log:
-  level: info
+identity:
+  organization: reg
+  # 🔐 Use a real private key in prod (0x-prefixed). Don't commit secrets.
+  key: "0x506d8a133655e0deaa86c6d6e5bfb7664d764dee6e6f842079412114d159c842"
 
 database:
   type: postgres
   postgres:
-    url: postgres://firefly:firefly@pg_reg:5432/firefly?sslmode=disable
+    url: postgres://firefly:firefly@postgres_reg:5432/firefly?sslmode=disable
+    maxOpenConns: 50
+    maxIdleConns: 25
+    connMaxLifetime: 30m
+    connMaxIdleTime: 5m
 
 blockchain:
-  type: evm
-  connector: evmconnect
+  type: evmconnect
   evmconnect:
-    url: http://evmconnect_reg:3000
+    url: http://evmconnect_reg:3000          # matches compose service/port
+    topic: reg                               # matches evmconnect/reg/config.yaml topics[0].name
     confirmations: 0
-    pollInterval: 1s
+    requestTimeout: 15s
+    gasOracle:
+      type: fixed
+      gasPrice: 0
+    txRetry:
+      maxInFlight: 50
+      initialDelay: 250ms
+      backoffFactor: 1.5
+      maxDelay: 10s
 
-multiparty:
-  enabled: true
-  org:
-    name: Regulator
-    key: 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-  node:
-    name: reg-node
-
+# Point the regulator node at ITS OWN DX (dx_reg), not dx_org1
 dataexchange:
   type: https
   https:
-    url: http://dx_org1:3001   # shares the same DX service for this sample
+    url: https://dx_reg:3001                 # <-- changed from dx_org1 to dx_reg
+    insecureSkipHostVerify: true             # dev/self-signed; set to false in prod with trusted CA
+    requestTimeout: 15s
+    idleConnTimeout: 90s
+    maxIdleConnsPerHost: 100
+
+dataexchangepeer:
+  enabled: true
 
 sharedstorage:
   type: ipfs
   ipfs:
-    api:
-      url: http://ipfs:5001
+    api: http://ipfs:5001
+    requestTimeout: 20s
+    pin: true
+
+namespaces:
+  default: default
+  predefined:
+    - name: default
+      description: "Regulator namespace"
+      multiparty:
+        enabled: true
+        networkNamespace: ff_system
+        org:
+          name: reg
+          key: "0x506d8a133655e0deaa86c6d6e5bfb7664d764dee6e6f842079412114d159c842"
+        node:
+          name: reg_node0
+      plugins:
+        - database
+        - blockchain
+        - dataexchange
+        - sharedstorage
+
+admin:
+  http:
+    address: 0.0.0.0
+    port: 5000          # container listens on 5000; compose publishes 5100->5000
+
+metrics:
+  http:
+    enabled: true
+    address: 0.0.0.0
+    port: 6100
+
+log:
+  level: info
+
+cors:
+  enabled: true
+  allowedOrigins: ["*"]
+  allowedMethods: ["GET","POST","PATCH","PUT","DELETE"]
+  allowedHeaders: ["*"]
+  exposedHeaders: ["*"]

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "dx_org1",
+    "url": "https://dx_org1:3001/api/v1/messages",
+    "topics": ["default"],
+    "enabled": true
+  }
+]

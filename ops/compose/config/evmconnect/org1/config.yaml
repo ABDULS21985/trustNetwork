@@ -1,0 +1,55 @@
+# //trust-fabric/ops/compose/config/evmconnect/org1/config.yaml
+
+server:
+  http:
+    address: 0.0.0.0
+    port: 3000
+  health:
+    enabled: true
+    path: /status
+    readinessProbe:
+      enabled: true
+      rpcPing: true
+      timeout: 5s
+
+backend:
+  type: rpc
+  rpc:
+    # Primary HTTP endpoint (tx submit / calls)
+    url: http://besu:8545
+    # Realtime subscriptions for blocks/logs
+    wsUrl: ws://besu:8546
+    chainID: 2018
+    maxInFlight: 100
+    requestTimeout: 15s
+    retry:
+      maxAttempts: 6
+      initialDelay: 250ms
+      backoffFactor: 1.6
+      maxDelay: 8s
+
+# Events: uses WS when available; falls back to polling
+events:
+  blockPollingInterval: 1s
+  confirmations: 0
+
+# Must match FireFly's namespace/topic for org1
+topics:
+  - name: org1
+    fromBlock: latest
+
+# Idempotence & replay protection (mounted at /data in compose)
+persistence:
+  type: leveldb
+  leveldb:
+    path: /data/leveldb
+
+# Guardrails for throughput spikes
+queues:
+  txSubmit:
+    maxLength: 10000
+  receipts:
+    maxWorkers: 8
+
+logging:
+  level: debug

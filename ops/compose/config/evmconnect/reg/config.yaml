@@ -1,0 +1,58 @@
+# //trust-fabric/ops/compose/config/evmconnect/reg/config.yaml
+
+server:
+  http:
+    address: 0.0.0.0
+    port: 3000
+  health:
+    enabled: true
+    path: /status
+    # Optional: delay readiness until RPC reachable
+    readinessProbe:
+      enabled: true
+      rpcPing: true
+      timeout: 5s
+
+backend:
+  type: rpc
+  rpc:
+    # HTTP endpoint for tx submission & calls
+    url: http://besu:8545
+    # WebSocket for block/tx subscriptions (enabled in your Besu compose)
+    wsUrl: ws://besu:8546
+    chainID: 2018
+    maxInFlight: 100
+    requestTimeout: 15s
+    # Retry/backoff for transient RPC errors
+    retry:
+      maxAttempts: 6
+      initialDelay: 250ms
+      backoffFactor: 1.6
+      maxDelay: 8s
+
+# Events: prefer WS; will fall back to polling if WS unavailable
+events:
+  blockPollingInterval: 1s
+  confirmations: 0
+  # If you want to filter specific contracts later, add "subscriptions" here.
+
+# Must match FireFly reg node config
+topics:
+  - name: reg
+    fromBlock: latest
+
+# Local on-disk state for idempotent delivery & replay protection
+persistence:
+  type: leveldb
+  leveldb:
+    path: /data/leveldb
+
+# Optional guards in busy networks (tune as needed)
+queues:
+  txSubmit:
+    maxLength: 10000
+  receipts:
+    maxWorkers: 8
+
+logging:
+  level: debug

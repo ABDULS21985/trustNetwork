@@ -1,9 +1,9 @@
 {
   "api": {
-    "hostname": "dx_org1",
+    "hostname": "dx_reg",
     "address": "0.0.0.0",
-    "port": 3001,
-    "publicURL": "https://dx_org1:3001",
+    "port": 3002,
+    "publicURL": "https://dx_reg:3002",
     "basePath": "/api/v1"
   },
   "tls": {
@@ -15,10 +15,10 @@
   },
   "p2p": {
     "enabled": true,
-    "hostname": "dx_org1",
+    "hostname": "dx_reg",
     "address": "0.0.0.0",
-    "port": 41000,
-    "advertise": { "host": "dx_org1", "port": 41000 }
+    "port": 41001,
+    "advertise": { "host": "dx_reg", "port": 41001 }
   },
   "storage": {
     "type": "filesystem",

@@ -1,48 +1,115 @@
-#//trust-fabric/ops/config/firefly/org1/firefly.core.yaml
+# //trust-fabric/ops/compose/config/firefly/org1/firefly.core.yaml
 
-node:
-  name: org1-node
-  description: Org1 FireFly Node
-  dataDir: /firefly/data
-
-http:
-  address: 0.0.0.0
-  port: 5000
-
-spi:
-  enabled: true
-
-log:
-  level: info
+identity:
+  # Human-friendly organization name (must match what you use in DX and in the other org's allowlist)
+  organization: org1
+  # 🔐 EVM signing key used by this node for on-chain txns (private key hex, 0x-prefixed)
+  # Replace immediately with a real key. Never commit real keys.
+  key: "0x506d8a133655e0deaa86c6d6e5bfb7664d764dee6e6f842079412114d159c842"
 
 database:
   type: postgres
   postgres:
-    url: postgres://firefly:firefly@pg_org1:5432/firefly?sslmode=disable
+    url: postgres://firefly:firefly@postgres_org1:5432/firefly?sslmode=disable
+    maxOpenConns: 50           # higher for prod traffic
+    maxIdleConns: 25
+    connMaxLifetime: 30m       # recycle to avoid stale conns
+    connMaxIdleTime: 5m
 
 blockchain:
-  type: evm
-  connector: evmconnect
+  type: evmconnect
   evmconnect:
+    # Must match the container+port from compose
     url: http://evmconnect_org1:3000
-    confirmations: 0
-    pollInterval: 1s
-
-multiparty:
-  enabled: true
-  org:
-    name: Org1
-    key: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  node:
-    name: org1-node
+    # Must match the topic you set in evmconnect/org1/config.yaml
+    topic: org1
+    confirmations: 0           # Besu dev network, instant finality
+    requestTimeout: 15s
+    # Cheap dev chain, fixed gas is fine. For real prod with non-zero gas, switch to "gasStation" or "oracle".
+    gasOracle:
+      type: fixed
+      gasPrice: 0
+    # Optional but helpful in prod to protect the connector
+    txRetry:
+      maxInFlight: 50
+      initialDelay: 250ms
+      backoffFactor: 1.5
+      maxDelay: 10s
 
 dataexchange:
+  # You’re using the HTTPS DX (firefly-dataexchange-https). Keep HTTPS here.
   type: https
   https:
-    url: http://dx_org1:3001
+    url: https://dx_org1:3001
+    # For real prod with proper DNS + certs, set this to false and present valid certs in the DX container.
+    insecureSkipHostVerify: true
+    # Reasonable network timeouts
+    requestTimeout: 15s
+    idleConnTimeout: 90s
+    maxIdleConnsPerHost: 100
+
+dataexchangepeer:
+  enabled: true
+  # Optional: advertise a custom peer name (defaults to org name). Must match DX peer config if you lock it down.
+  # name: org1
 
 sharedstorage:
   type: ipfs
   ipfs:
-    api:
-      url: http://ipfs:5001
+    api: http://ipfs:5001
+    requestTimeout: 20s
+    pin: true
+
+namespaces:
+  default: default
+  predefined:
+    - name: default
+      description: "Org1 namespace"
+      # ✅ Multiparty is recommended when you’re running multiple orgs with DX (which you are).
+      multiparty:
+        enabled: true
+        # FireFly’s system namespace for shared contracts/messages
+        networkNamespace: ff_system
+        org:
+          name: org1
+          # Use the same on-chain key as identity.key above (or set a distinct one if you prefer)
+          key: "0x506d8a133655e0deaa86c6d6e5bfb7664d764dee6e6f842079412114d159c842"
+        node:
+          # Arbitrary node name unique within the org
+          name: org1_node0
+      # The plugins this namespace will use
+      plugins:
+        - database
+        - blockchain
+        - dataexchange
+        - sharedstorage
+
+admin:
+  http:
+    address: 0.0.0.0
+    port: 5000
+  # Optionally protect in prod behind an API gateway or mTLS
+
+metrics:
+  http:
+    enabled: true
+    address: 0.0.0.0
+    port: 6000
+
+log:
+  # Use "info" or "warn" in prod; bump to "debug" only when diagnosing
+  level: info
+
+# Optional global CORS if you call Admin/Private APIs from a browser
+cors:
+  enabled: true
+  allowedOrigins:
+    - "*"
+  allowedMethods:
+    - GET
+    - POST
+    - PATCH
+    - PUT
+    - DELETE
+  allowedHeaders:
+    - "*"
