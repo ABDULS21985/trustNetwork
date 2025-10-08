@@ -1,6 +1,5 @@
 identity:
   organization: reg
-  # 🔐 Replace with a real EVM private key in production
   key: "0x506d8a133655e0deaa86c6d6e5bfb7664d764dee6e6f842079412114d159c842"
 
 database:
@@ -31,7 +30,6 @@ blockchain:
 dataexchange:
   type: https
   https:
-    # <-- IMPORTANT: regulator FF talks to its own DX
     url: https://dx_reg:3001
     insecureSkipHostVerify: true
     requestTimeout: 15s
@@ -61,11 +59,7 @@ namespaces:
           key: "0x506d8a133655e0deaa86c6d6e5bfb7664d764dee6e6f842079412114d159c842"
         node:
           name: reg_node0
-      plugins:
-        - database
-        - blockchain
-        - dataexchange
-        - sharedstorage
+      plugins: [database, blockchain, dataexchange, sharedstorage]
 
 admin:
   http:
@@ -86,4 +80,3 @@ cors:
   allowedOrigins: ["*"]
   allowedMethods: ["GET","POST","PATCH","PUT","DELETE"]
   allowedHeaders: ["*"]
-  exposedHeaders: ["*"]

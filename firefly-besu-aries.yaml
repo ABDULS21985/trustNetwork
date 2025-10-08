@@ -146,12 +146,12 @@ services:
     expose:
       - "41000"
     ports:
-      - "3001:3001"   # HTTPS Admin/API
-      - "41000:41000" # P2P
+      - "3001:3001"
+      - "41000:41000"
     networks: [tf_net]
     volumes:
       - type: bind
-        source: ./config/dx_org1
+        source: C:\CODES\trust\trust-fabric\ops\compose\config\dx_org1   # <-- EXACT PATH
         target: /config
         read_only: true
         bind:
@@ -167,7 +167,9 @@ services:
       start_period: 15s
     restart: unless-stopped
     ulimits:
-      nofile: { soft: 65535, hard: 65535 }
+      nofile:
+        soft: 65535
+        hard: 65535
 
   dx_reg:
     image: "${FF_DX_IMAGE}:${FF_DX_TAG}"
@@ -178,12 +180,12 @@ services:
     expose:
       - "41000"
     ports:
-      - "3002:3001"    # HTTPS Admin/API for regulator
-      - "41001:41000"  # P2P for regulator
+      - "3002:3001"     # HTTPS for dx_reg on host 3002
+      - "41001:41000"   # P2P for dx_reg on host 41001
     networks: [tf_net]
     volumes:
       - type: bind
-        source: ./config/dx_reg
+        source: C:\CODES\trust\trust-fabric\ops\compose\config\dx_reg
         target: /config
         read_only: true
         bind:
@@ -199,7 +201,9 @@ services:
       start_period: 15s
     restart: unless-stopped
     ulimits:
-      nofile: { soft: 65535, hard: 65535 }
+      nofile:
+        soft: 65535
+        hard: 65535
 
 
 
@@ -238,8 +242,9 @@ services:
     depends_on:
       postgres_reg:    { condition: service_healthy }
       evmconnect_reg:  { condition: service_healthy }
+      dx_org1:         { condition: service_healthy }
       ipfs:            { condition: service_started }
-      dx_reg:          { condition: service_healthy }
+      dx_reg:         { condition: service_healthy }
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/api/v1/status"]
       interval: 10s
@@ -247,8 +252,6 @@ services:
       retries: 10
       start_period: 30s
     restart: unless-stopped
-
-
 
   firefly_console:
     build:
