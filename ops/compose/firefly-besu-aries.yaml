@@ -13,6 +13,7 @@ volumes:
   evmconnect_org1_data: {}
   evmconnect_reg_data: {}
   dx_org1_data: {}
+  dx_reg_data: {}
 
 services:
   besu:
@@ -137,42 +138,22 @@ services:
     environment:
       DATA_DIRECTORY: /config
       LOG_LEVEL: debug
-    # publish P2P to host for cross-host peering and API for FireFly
-    ports:
-      - "${DX_PORT:-3001}:3001"      # HTTPS API
-      - "${DX_P2P:-41000}:41000"     # P2P TCP
-    expose: ["41000"]
-    networks: [tf_net]
-    volumes:
-      # Mount the DX config dir (must contain config.json + certs + destinations + peers)
-      - ./config/dx:/config:ro
-      # Blob storage on a writable volume
-      - dx_org1_data:/data/files
-    ulimits: { nofile: { soft: 65535, hard: 65535 } }
-    healthcheck:
-      # DX runs with TLS; skip verification for self-signed certs
-      test: ["CMD-SHELL", "wget --no-check-certificate --spider -q https://localhost:3001/api/v1/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-    restart: unless-stopped
-
-  dx_reg:
-    image: "${FF_DX_IMAGE}:${FF_DX_TAG}"
-    container_name: dx_reg
-    environment:
-      DATA_DIRECTORY: /config
-      LOG_LEVEL: debug
     expose:
       - "41000"
     ports:
-      - "3002:3001"    # optional host access to reg DX API
-      - "41001:41000"  # optional host P2P (handy if peering across hosts)
+      - "3001:3001"
+      - "41000:41000"
     networks: [tf_net]
     volumes:
-      - ./config/dx_reg:/config:ro
-      - dx_org1_data:/data/files   # or create a separate dx_reg_data volume if you prefer
+      - type: bind
+        source: C:\CODES\trust\trust-fabric\ops\compose\config\dx_org1   # <-- EXACT PATH
+        target: /config
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: volume
+        source: dx_org1_data
+        target: /data/files
     healthcheck:
       test: ["CMD-SHELL", "wget --no-check-certificate --spider -q https://localhost:3001/api/v1/status"]
       interval: 10s
@@ -184,6 +165,41 @@ services:
       nofile:
         soft: 65535
         hard: 65535
+
+  dx_reg:
+    image: "${FF_DX_IMAGE}:${FF_DX_TAG}"
+    container_name: dx_reg
+    environment:
+      DATA_DIRECTORY: /config
+      LOG_LEVEL: debug
+    expose:
+      - "41000"
+    ports:
+      - "3002:3001"     # HTTPS for dx_reg on host 3002
+      - "41001:41000"   # P2P for dx_reg on host 41001
+    networks: [tf_net]
+    volumes:
+      - type: bind
+        source: C:\CODES\trust\trust-fabric\ops\compose\config\dx_reg
+        target: /config
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: volume
+        source: dx_reg_data
+        target: /data/files
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate --spider -q https://localhost:3001/api/v1/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
 
 
 
@@ -223,6 +239,7 @@ services:
       evmconnect_reg:  { condition: service_healthy }
       dx_org1:         { condition: service_healthy }
       ipfs:            { condition: service_started }
+      dx_reg:         { condition: service_healthy }
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/api/v1/status"]
       interval: 10s

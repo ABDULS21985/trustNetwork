@@ -1,8 +1,8 @@
 {
   "destinations": [
     {
-      "name": "dx_org1",
-      "url": "https://dx_org1:3001/api/v1/messages",
+      "name": "dx_reg",
+      "url": "https://dx_reg:3001/api/v1/messages",
       "topics": ["default"],
       "enabled": true
     }

@@ -1,7 +1,11 @@
-[
-  {
-    "name": "dx_org1",
-    "id": "D14844017E8C942B3A032C2F7A4BAB4E6F75F10567E84E68B09721A59FBA504F",
-    "endpoint": "dx_org1:41000"
-  }
-]
+
+
+{
+  "peers": [
+    {
+      "name": "dx_org1",
+      "id": "D14844017E8C942B3A032C2F7A4BAB4E6F75F10567E84E68B09721A59FBA504F",
+      "endpoint": "dx_org1:41000"
+    }
+  ]
+}

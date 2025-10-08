@@ -1,8 +1,6 @@
-# //trust-fabric/ops/compose/config/firefly/reg/firefly.core.yaml
-
 identity:
   organization: reg
-  # 🔐 Use a real private key in prod (0x-prefixed). Don't commit secrets.
+  # 🔐 Replace with a real EVM private key in production
   key: "0x506d8a133655e0deaa86c6d6e5bfb7664d764dee6e6f842079412114d159c842"
 
 database:
@@ -17,8 +15,8 @@ database:
 blockchain:
   type: evmconnect
   evmconnect:
-    url: http://evmconnect_reg:3000          # matches compose service/port
-    topic: reg                               # matches evmconnect/reg/config.yaml topics[0].name
+    url: http://evmconnect_reg:3000
+    topic: reg
     confirmations: 0
     requestTimeout: 15s
     gasOracle:
@@ -30,12 +28,12 @@ blockchain:
       backoffFactor: 1.5
       maxDelay: 10s
 
-# Point the regulator node at ITS OWN DX (dx_reg), not dx_org1
 dataexchange:
   type: https
   https:
-    url: https://dx_reg:3001                 # <-- changed from dx_org1 to dx_reg
-    insecureSkipHostVerify: true             # dev/self-signed; set to false in prod with trusted CA
+    # <-- IMPORTANT: regulator FF talks to its own DX
+    url: https://dx_reg:3001
+    insecureSkipHostVerify: true
     requestTimeout: 15s
     idleConnTimeout: 90s
     maxIdleConnsPerHost: 100
@@ -72,7 +70,7 @@ namespaces:
 admin:
   http:
     address: 0.0.0.0
-    port: 5000          # container listens on 5000; compose publishes 5100->5000
+    port: 5000
 
 metrics:
   http:

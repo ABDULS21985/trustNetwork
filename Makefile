@@ -90,12 +90,14 @@ ui: ## Open the FireFly UI in browser
 doctor: ## Quick diagnostics (files, mounts, ports)
 	@echo "== File presence checks =="; \
 	for f in \
-	  ops/compose/config/dx/config.json \
-	  ops/compose/config/dx/certs/ca.pem \
-	  ops/compose/config/dx/certs/cert.pem \
-	  ops/compose/config/dx/certs/key.pem \
-	  ops/compose/config/dx/destinations/data.json \
-	  ops/compose/config/dx/peers/data.json \
+	  ops/compose/config/dx_org1/config.json \
+	  ops/compose/config/dx_org1/certs/ca.pem \
+	  ops/compose/config/dx_org1/certs/cert.pem \
+	  ops/compose/config/dx_org1/certs/key.pem \
+	  ops/compose/config/dx_reg/config.json \
+	  ops/compose/config/dx_reg/certs/ca.pem \
+	  ops/compose/config/dx_reg/certs/cert.pem \
+	  ops/compose/config/dx_reg/certs/key.pem \
 	  ops/compose/config/evmconnect/org1/config.yaml \
 	  ops/compose/config/evmconnect/reg/config.yaml \
 	  ops/compose/config/firefly/org1/firefly.core.yaml \
@@ -109,6 +111,7 @@ doctor: ## Quick diagnostics (files, mounts, ports)
 	echo ""; \
 	echo "== Compose mount grep =="; \
 	grep -nE "/config\.yaml|firefly\.core\.yaml|config\.json|volumes:" $(COMPOSE_FILE) || true
+
 
 # -----------------------------
 # Port resolver for FireFly orgs
